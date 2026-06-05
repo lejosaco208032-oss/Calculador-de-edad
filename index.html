@@ -4,66 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Edad</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
     <style>
-        :root { --primary: #4f46e5; --bg: #f3f4f6; }
-        body { font-family: sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 320px; text-align: center; }
+        :root { 
+            --accent: #2563eb; 
+        }
         
-        .logo { font-size: 3rem; margin-bottom: 0.5rem; }
-        #display { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: #6b7280; }
-        .age-display { margin: 1.5rem 0; padding: 1rem; border-radius: 1rem; background: #f9fafb; }
-        .res-val { font-size: 3.5rem; font-weight: 900; color: var(--primary); display: block; line-height: 1; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            /* Fondo con degradado suave */
+            background: linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+            color: #1a1a1a; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+
+        .card { 
+            width: 100%; 
+            max-width: 300px; 
+            padding: 2.5rem 2rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
         
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        button { padding: 1.2rem; font-size: 1.2rem; border: none; border-radius: 0.8rem; background: #e5e7eb; cursor: pointer; transition: 0.2s; }
-        button:active { background: #d1d5db; transform: scale(0.95); }
-        .btn-clear { background: #fee2e2; color: #dc2626; grid-column: span 3; margin-top: 10px; font-weight: bold; }
+        .status { 
+            font-size: 0.75rem; 
+            font-weight: 700;
+            color: #6366f1; 
+            margin-bottom: 0.5rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em; 
+        }
+
+        .res-val { 
+            font-size: 6rem; 
+            font-weight: 200; 
+            margin: 0;
+            color: #1e293b;
+            transition: all 0.4s ease;
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            margin-top: 2.5rem; 
+        }
+
+        button { 
+            background: rgba(255, 255, 255, 0.6); 
+            border: 1px solid rgba(255, 255, 255, 0.8); 
+            padding: 18px 0; 
+            border-radius: 1.2rem; 
+            font-size: 1.1rem; 
+            font-weight: 500;
+            cursor: pointer; 
+            transition: all 0.2s; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        button:active { 
+            transform: scale(0.95); 
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn-month { font-size: 0.8rem; font-weight: 600; }
+        
+        .btn-clear { 
+            grid-column: span 3; 
+            background: none; 
+            border: none;
+            color: #94a3b8; 
+            font-size: 0.7rem; 
+            margin-top: 10px;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="logo">📅</div>
-    <div id="display">Año: --</div>
-    <div class="age-display">
-        <div style="font-size: 0.9rem; color: #6b7280;">Edad actual</div>
-        <span class="res-val" id="ageOut">--</span>
-        <div id="fullYear" style="font-size: 0.8rem; color: #9ca3af; margin-top: 5px;">Año detectado: --</div>
-    </div>
-    <div class="grid">
-        <button onclick="add(1)">1</button> <button onclick="add(2)">2</button> <button onclick="add(3)">3</button>
-        <button onclick="add(4)">4</button> <button onclick="add(5)">5</button> <button onclick="add(6)">6</button>
-        <button onclick="add(7)">7</button> <button onclick="add(8)">8</button> <button onclick="add(9)">9</button>
-        <button onclick="add(0)" style="grid-column: span 3;">0</button>
-        <button class="btn-clear" onclick="limpiar()">Limpiar</button>
-    </div>
+    <div id="status" class="status">Ingresa el año</div>
+    <div class="res-val" id="ageOut">--</div>
+    <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 500;">años cumplidos</div>
+
+    <div id="keyboard" class="grid"></div>
 </div>
 
 <script>
-    let input = "";
-    function add(num) {
-        if (input.length < 2) {
-            input += num;
-            document.getElementById('display').innerText = "Año ingresado: " + input;
-            if (input.length === 2) calcular();
+    let step = 0, yearInput = "", monthIndex = -1;
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+    function renderKeyboard() {
+        const grid = document.getElementById('keyboard');
+        grid.innerHTML = "";
+        if (step === 0) {
+            [1,2,3,4,5,6,7,8,9,0].forEach(n => grid.innerHTML += `<button onclick="addYear(${n})">${n}</button>`);
+        } else {
+            months.forEach((m, i) => grid.innerHTML += `<button class="btn-month" onclick="selectMonth(${i})">${m}</button>`);
+        }
+        grid.innerHTML += `<button class="btn-clear" onclick="limpiar()">REINICIAR</button>`;
+    }
+
+    function addYear(n) {
+        yearInput += n;
+        document.getElementById('status').innerText = "Año: " + yearInput;
+        if (yearInput.length === 2) { 
+            step = 1; 
+            document.getElementById('status').innerText = "Selecciona tu mes";
+            renderKeyboard(); 
         }
     }
-    function calcular() {
-        const shortYear = parseInt(input);
+
+    function selectMonth(i) {
+        monthIndex = i;
         const currentYear = new Date().getFullYear();
-        let fullYear = 2000 + shortYear;
+        let fullYear = 2000 + parseInt(yearInput);
         if (fullYear > currentYear) fullYear -= 100;
-        document.getElementById('fullYear').innerText = "Año detectado: " + fullYear;
-        document.getElementById('ageOut').innerText = currentYear - fullYear;
+
+        let age = currentYear - fullYear;
+        if (monthIndex > new Date().getMonth()) age--;
+        
+        document.getElementById('ageOut').innerText = age;
+        document.getElementById('ageOut').style.color = 'var(--accent)';
+        document.getElementById('status').innerText = months[i] + " " + fullYear;
     }
+
     function limpiar() {
-        input = "";
-        document.getElementById('display').innerText = "Año: --";
+        yearInput = ""; step = 0;
         document.getElementById('ageOut').innerText = "--";
-        document.getElementById('fullYear').innerText = "Año detectado: --";
+        document.getElementById('ageOut').style.color = '#1e293b';
+        document.getElementById('status').innerText = "Ingresa el año";
+        renderKeyboard();
     }
+
+    renderKeyboard();
 </script>
 </body>
 </html>
